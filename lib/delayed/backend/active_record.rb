@@ -88,7 +88,7 @@ module Delayed
         end
         
         def set_site_keyname
-          self.site_keyname = self.class.site.keyname if self.class.site
+          self.site_keyname = Site.keyname
         end
         
         def set_site
