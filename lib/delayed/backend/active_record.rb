@@ -39,26 +39,26 @@ module Delayed
         
         def reschedule_if_found
           puts "self: #{self.inspect}"
-          if !payload_object.respond_to?(:perform)
+          if !self.payload_object.respond_to?(:perform)
             raise ArgumentError, 'Cannot enqueue items which do not respond to perform'
           end
           
           puts "run_at: #{run_at.inspect}"
                     
           puts "OBJECT: #{payload_object.inspect} ARGS: #{payload_object.args.inspect}"
-          if payload_object.respond_to?(:args) && payload_object.args.is_a?(Array) && payload_object.args[0].is_a?(Hash) && payload_object.args[0][:reschedule_if_found]
-            payload_object.args[0].delete :reschedule_if_found
+          if self.payload_object.respond_to?(:args) && self.payload_object.args.is_a?(Array) && self.payload_object.args[0].is_a?(Hash) && self.payload_object.args[0][:reschedule_if_found]
+            self.payload_object.args[0].delete :reschedule_if_found
             # did we just blank out the hash? make it nil if so
-            if payload_object.args[0].blank?
-              payload_object.args.delete_at(0)
+            if self.payload_object.args[0].blank?
+              self.payload_object.args.delete_at(0)
             end
             puts "OBJECT NOW: #{payload_object.inspect}"
             # should we reschedule an existing job, or create it?
             # hack in here for make_payment calls -- those will be 
-            if run_at && payload_object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === payload_object.object
+            if run_at && self.payload_object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === self.payload_object.object
               klass = $1
               id = $2
-              if id.present? && matching = self.class.existing(klass, id, payload_object.method)
+              if id.present? && matching = self.class.existing(klass, id, self.payload_object.method)
                 if matching.length > 0
                   puts "JUST RESHEDULING #{klass} #{id}"
                   matching.each{|x| x.reschedule!(run_at) }
