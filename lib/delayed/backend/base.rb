@@ -12,12 +12,37 @@ module Delayed
         # Add a job to the queue
         def enqueue(*args)
           object = args.shift
+          priority = args.first || Delayed::Worker.default_priority
+          
           unless object.respond_to?(:perform)
             raise ArgumentError, 'Cannot enqueue items which do not respond to perform'
           end
-    
-          priority = args.first || Delayed::Worker.default_priority
-          run_at   = args[1]
+          
+          run_at = args[1]
+                    
+          # puts "OBJECT: #{object.inspect} ARGS: #{object.args.inspect}"
+          if object.respond_to?(:args) && object.args.is_a?(Array) && object.args[0].is_a?(Hash) && object.args[0][:reschedule_if_found]
+            object.args[0].delete :reschedule_if_found
+            # did we just blank out the hash? make it nil if so
+            if object.args[0].blank?
+              object.args.delete_at(0)
+            end
+            # puts "OBJECT NOW: #{object.inspect}"
+            # should we reschedule an existing job, or create it?
+            # hack in here for make_payment calls -- those will be 
+            if run_at && object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === object.object
+              klass = $1
+              id = $2
+              if id.present? && matching = existing(klass, id, object.method)
+                if matching.length > 0
+                  puts "JUST RESHEDULING #{klass} #{id}"
+                  matching.each{|x| x.reschedule!(run_at) }
+                  return matching
+                end
+              end
+            end
+          end
+
           self.create(:payload_object => object, :priority => priority.to_i, :run_at => run_at)
         end
 

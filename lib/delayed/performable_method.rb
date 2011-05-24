@@ -30,12 +30,12 @@ module Delayed
         "#{object.class}##{method}"
       end
     end
-    
+
     def perform
       load(object).send(method, *args.map{|a| load(a)})
-    rescue PerformableMethod::LoadError
-      # We cannot do anything about objects that can't be loaded
-      true
+    rescue Exception => e
+      ExceptionNotifier.notify(e, :data => {:session => {:object => object.inspect, :loaded_object => load(object).inspect, :method => method, :args => args.inspect}})
+      raise e
     end
 
     private
@@ -47,6 +47,7 @@ module Delayed
         obj
       end
     rescue => e
+      ExceptionNotifier.notify(e, :data => {:session => {:object => object.inspect, :method => method.inspect, :args => args.inspect}})
       Delayed::Worker.logger.warn "Could not load object for job: #{e.message}"
       raise PerformableMethod::LoadError
     end

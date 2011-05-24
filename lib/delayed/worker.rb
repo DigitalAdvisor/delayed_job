@@ -161,11 +161,12 @@ module Delayed
   protected
     
     def handle_failed_job(job, error)
+      ExceptionNotifier.notify(error, :data => {:session => job.attributes})
       job.last_error = error.message + "\n" + error.backtrace.join("\n")
       say "#{job.name} failed with #{error.class.name}: #{error.message} - #{job.attempts} failed attempts", Logger::ERROR
       reschedule(job)
     end
-    
+
     # Run the next job we can get an exclusive lock on.
     # If no jobs are left we return nil
     def reserve_and_run_one_job

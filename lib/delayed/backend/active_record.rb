@@ -25,10 +25,31 @@ module Delayed
         
         before_save :set_default_run_at
 
-        named_scope :ready_to_run, lambda {|worker_name, max_run_time|
-          {:conditions => ['(run_at <= ? AND (locked_at IS NULL OR locked_at < ?) OR locked_by = ?) AND failed_at IS NULL', db_time_now, db_time_now - max_run_time, worker_name]}
+        scope :ready_to_run, lambda {|worker_name, max_run_time|
+          where(['(run_at <= ? AND (locked_at IS NULL OR locked_at < ?) OR locked_by = ?) AND failed_at IS NULL', db_time_now, db_time_now - max_run_time, worker_name])
         }
-        named_scope :by_priority, :order => 'priority ASC, run_at ASC'
+        scope :by_priority, order('priority ASC, run_at ASC')
+        scope :existing, lambda { |obj_class, obj_id, method| where(:performable_id => obj_id, :performable_type => obj_class.to_s, :performable_method => method.to_s) }
+        
+        before_save do |obj|
+          if obj.payload_object && obj.payload_object.object
+            # do we match the format 
+            if Delayed::PerformableMethod::STRING_FORMAT === obj.payload_object.object
+              klass = $1
+              id = $2
+              if id.present?
+                obj.performable_id = id.to_i
+                obj.performable_type = klass.to_s
+                obj.performable_method = obj.payload_object.method.to_s
+              end
+            end
+          end
+          true
+        end
+        
+        def reschedule!(time)
+          update_attribute(:run_at, time) unless time.to_s(&:db) == run_at.to_s(&:db)
+        end
         
         def self.after_fork
           ::ActiveRecord::Base.connection.reconnect!
