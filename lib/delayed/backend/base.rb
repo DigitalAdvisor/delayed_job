@@ -11,23 +11,26 @@ module Delayed
       module ClassMethods
         # Add a job to the queue
         def enqueue(*args)
+          puts "args: #{args.inspect}"
           object = args.shift
           priority = args.first || Delayed::Worker.default_priority
-          
+          puts "object: #{object.inspect}"
+          puts "priority: #{priority.inspect}"
           unless object.respond_to?(:perform)
             raise ArgumentError, 'Cannot enqueue items which do not respond to perform'
           end
           
           run_at = args[1]
+          puts "run_at: #{run_at.inspect}"
                     
-          # puts "OBJECT: #{object.inspect} ARGS: #{object.args.inspect}"
+          puts "OBJECT: #{object.inspect} ARGS: #{object.args.inspect}"
           if object.respond_to?(:args) && object.args.is_a?(Array) && object.args[0].is_a?(Hash) && object.args[0][:reschedule_if_found]
             object.args[0].delete :reschedule_if_found
             # did we just blank out the hash? make it nil if so
             if object.args[0].blank?
               object.args.delete_at(0)
             end
-            # puts "OBJECT NOW: #{object.inspect}"
+            puts "OBJECT NOW: #{object.inspect}"
             # should we reschedule an existing job, or create it?
             # hack in here for make_payment calls -- those will be 
             if run_at && object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === object.object
