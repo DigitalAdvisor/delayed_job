@@ -52,6 +52,10 @@ module Delayed
             if self.payload_object.args[0].blank?
               self.payload_object.args.delete_at(0)
             end
+            
+            # save our changes
+            self.payload_object = payload_object
+            
             puts "OBJECT NOW: #{self.payload_object.inspect}"
             # should we reschedule an existing job, or create it?
             # hack in here for make_payment calls -- those will be 
