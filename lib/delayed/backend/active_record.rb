@@ -45,14 +45,14 @@ module Delayed
           
           puts "run_at: #{run_at.inspect}"
                     
-          puts "OBJECT: #{payload_object.inspect} ARGS: #{payload_object.args.inspect}"
+          puts "OBJECT: #{self.payload_object.inspect} ARGS: #{self.payload_object.args.inspect}"
           if self.payload_object.respond_to?(:args) && self.payload_object.args.is_a?(Array) && self.payload_object.args[0].is_a?(Hash) && self.payload_object.args[0][:reschedule_if_found]
             self.payload_object.args[0].delete :reschedule_if_found
             # did we just blank out the hash? make it nil if so
             if self.payload_object.args[0].blank?
               self.payload_object.args.delete_at(0)
             end
-            puts "OBJECT NOW: #{payload_object.inspect}"
+            puts "OBJECT NOW: #{self.payload_object.inspect}"
             # should we reschedule an existing job, or create it?
             # hack in here for make_payment calls -- those will be 
             if run_at && self.payload_object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === self.payload_object.object
@@ -67,6 +67,8 @@ module Delayed
               end
             end
           end
+          
+          puts "END OF BEFORE FILTER: #{self.payload_object.inspect}"
           
           true
         end
