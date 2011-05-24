@@ -31,21 +31,9 @@ module Delayed
         scope :by_priority, order('priority ASC, run_at ASC')
         scope :existing, lambda { |obj_class, obj_id, method| where(:performable_id => obj_id, :performable_type => obj_class.to_s, :performable_method => method.to_s) }
         
-        before_save do |obj|
-          if obj.payload_object && obj.payload_object.object
-            # do we match the format 
-            if Delayed::PerformableMethod::STRING_FORMAT === obj.payload_object.object
-              klass = $1
-              id = $2
-              if id.present?
-                obj.performable_id = id.to_i
-                obj.performable_type = klass.to_s
-                obj.performable_method = obj.payload_object.method.to_s
-              end
-            end
-          end
-          true
-        end
+        before_save :set_performable_info
+        before_save :set_site_keyname
+        after_initialize :set_site
         
         before_create :reschedule_if_found
         
@@ -81,6 +69,30 @@ module Delayed
           end
           
           true
+        end
+        
+        def set_performable_info
+          if payload_object && payload_object.object
+            # do we match the format 
+            if Delayed::PerformableMethod::STRING_FORMAT === payload_object.object
+              klass = $1
+              id = $2
+              if id.present?
+                self.performable_id = id.to_i
+                self.performable_type = klass.to_s
+                self.performable_method = payload_object.method.to_s
+              end
+            end
+          end
+          true
+        end
+        
+        def set_site_keyname
+          self.site_keyname = self.class.site.keyname if self.class.site
+        end
+        
+        def set_site
+          Site.keyname(self.site_keyname)
         end
         
         def reschedule!(time)
