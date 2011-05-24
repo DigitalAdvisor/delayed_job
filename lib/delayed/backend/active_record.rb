@@ -92,7 +92,7 @@ module Delayed
         end
         
         def set_site
-          Site.keyname(self.site_keyname)
+          Site.set_keyname(self.site_keyname)
         end
         
         def reschedule!(time)
