@@ -50,7 +50,7 @@ module Delayed
         before_create :reschedule_if_found
         
         def reschedule_if_found
-          puts "args: #{args.inspect}"
+          puts "self: #{self.inspect}"
           if !payload_object.respond_to?(:perform)
             raise ArgumentError, 'Cannot enqueue items which do not respond to perform'
           end
