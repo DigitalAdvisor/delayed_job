@@ -88,11 +88,11 @@ module Delayed
         end
         
         def set_site_keyname
-          self.site_keyname = Site.keyname
+          self.site_keyname = Site.keyname.to_s
         end
         
         def set_site
-          Site.set_keyname(self.site_keyname)
+          Site.set_keyname(self.site_keyname) if !new_record?
         end
         
         def reschedule!(time)
