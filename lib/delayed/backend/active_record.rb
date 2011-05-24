@@ -70,7 +70,7 @@ module Delayed
             if run_at && payload_object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === payload_object.object
               klass = $1
               id = $2
-              if id.present? && matching = existing(klass, id, payload_object.method)
+              if id.present? && matching = self.class.existing(klass, id, payload_object.method)
                 if matching.length > 0
                   puts "JUST RESHEDULING #{klass} #{id}"
                   matching.each{|x| x.reschedule!(run_at) }
