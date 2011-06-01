@@ -46,11 +46,11 @@ module Delayed
           puts "run_at: #{run_at.inspect}"
                     
           puts "OBJECT: #{self.payload_object.inspect} ARGS: #{self.payload_object.args.inspect}"
-          if self.payload_object.respond_to?(:args) && self.payload_object.args.is_a?(Array) && self.payload_object.args[0].is_a?(Hash) && self.payload_object.args[0][:reschedule_if_found]
-            self.payload_object.args[0].delete :reschedule_if_found
+          if self.payload_object.respond_to?(:args) && self.payload_object.args.is_a?(Array) && self.payload_object.args.last.is_a?(Hash) && self.payload_object.args.last[:reschedule_if_found]
+            self.payload_object.args.last.delete :reschedule_if_found
             # did we just blank out the hash? make it nil if so
-            if self.payload_object.args[0].blank?
-              self.payload_object.args.delete_at(0)
+            if self.payload_object.args.last.blank?
+              self.payload_object.args.pop
             end
             
             # save our changes
