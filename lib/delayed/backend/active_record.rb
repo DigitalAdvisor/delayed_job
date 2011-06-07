@@ -38,14 +38,14 @@ module Delayed
         before_create :reschedule_if_found
         
         def reschedule_if_found
-          puts "self: #{self.inspect}"
+          # puts "self: #{self.inspect}"
           if !self.payload_object.respond_to?(:perform)
             raise ArgumentError, 'Cannot enqueue items which do not respond to perform'
           end
           
-          puts "run_at: #{run_at.inspect}"
+          # puts "run_at: #{run_at.inspect}"
                     
-          puts "OBJECT: #{self.payload_object.inspect} ARGS: #{self.payload_object.args.inspect}"
+          # puts "OBJECT: #{self.payload_object.inspect} ARGS: #{self.payload_object.args.inspect}"
           if self.payload_object.respond_to?(:args) && self.payload_object.args.is_a?(Array) && self.payload_object.args.last.is_a?(Hash) && self.payload_object.args.last[:reschedule_if_found]
             self.payload_object.args.last.delete :reschedule_if_found
             # did we just blank out the hash? make it nil if so
@@ -56,7 +56,7 @@ module Delayed
             # save our changes
             self.payload_object = payload_object
             
-            puts "OBJECT NOW: #{self.payload_object.inspect}"
+            # puts "OBJECT NOW: #{self.payload_object.inspect}"
             # should we reschedule an existing job, or create it?
             # hack in here for make_payment calls -- those will be 
             if run_at && self.payload_object.is_a?(Delayed::PerformableMethod) && Delayed::PerformableMethod::STRING_FORMAT === self.payload_object.object
@@ -64,7 +64,7 @@ module Delayed
               id = $2
               if id.present? && matching = self.class.existing(klass, id, self.payload_object.method)
                 if matching.length > 0
-                  puts "JUST RESHEDULING #{klass} #{id}"
+                  # puts "JUST RESHEDULING #{klass} #{id}"
                   matching.each{|x| x.reschedule!(run_at) }
                   return false
                 end
@@ -72,7 +72,7 @@ module Delayed
             end
           end
           
-          puts "END OF BEFORE FILTER: #{self.payload_object.inspect}"
+          # puts "END OF BEFORE FILTER: #{self.payload_object.inspect}"
           
           true
         end
